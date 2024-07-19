@@ -1,0 +1,5 @@
+- 👋 Hi, I’m Matteo Montrucchio and I am currently stuyding applied data science for banking and finance.
+- 👀 I have a strong interest for the analysis of data and finance. In this page, I will publish the different projects I will work on!
+- 💻 Projects:
+- 
+- 📫 How to reach me: matteo.montr@gmail.com
