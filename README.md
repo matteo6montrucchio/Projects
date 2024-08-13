@@ -3,3 +3,4 @@
 - 💻 Projects:
 - 
 - 📫 How to reach me: matteo.montr@gmail.com
+- 📱 Linkedin: Matteo Montrucchio
