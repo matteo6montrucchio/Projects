@@ -1,0 +1,72 @@
+---
+title: "AB Testing Analysis"
+author: "Matteo Montrucchio"
+date: "2024-04-08"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+In the following file, I will evaluate the effectiveness of featuring actions.
+I will analyze a dataset characterized by weekly sales and prices of orange juices across different stores for three brands. To evaluate the effectiveness of featuring actions, I compare the average sales by feat category.
+
+
+```{r include=FALSE}
+options(repos = c(CRAN = "https://cloud.r-project.org/"))
+install.packages("tinytex")
+tinytex::install_tinytex(force = TRUE)
+
+```
+```{r include=FALSE}
+library(dplyr)
+library(ggplot2)
+```
+
+
+```{r}
+library(readr)
+oj.data <- read_csv("/Users/matteomontrucchio/Desktop/oj_data.csv", show_col_types = FALSE)
+```
+
+
+```{r cars}
+# show the first rows of the dataset
+head(oj.data)
+```
+
+```{r}
+# summarize the information contained in the dataset
+summary(oj.data)
+```
+
+```{r}
+# generate the plot comparing average sales by feat category and their SD
+oj.data %>%
+  mutate(feat= as.factor(feat)) %>%     # from the summary(), feat is stored as numeric variable
+  group_by(feat) %>%                    
+  summarise(Average = mean(sales),
+            SD = sd(sales)) %>%
+  ggplot(aes(feat,Average)) + 
+  geom_point(size=5) +
+  geom_errorbar(aes(ymin=Average-SD, ymax=Average+SD), width=.2) 
+```
+
+```{r}
+t.table <- oj.data %>%
+  mutate(feat= as.factor(feat)) %>%
+  group_by(feat) %>%
+  summarise(Average = mean(sales),
+            Var = var(sales),
+            N = n())
+t.table
+```
+
+```{r}
+t.test(oj.data[oj.data$feat==1, 1], oj.data[oj.data$feat==0, 1], var.equal=FALSE)
+```
+The data provided shows how average sales are higher when the product is featured.
+
+On average, 40590 quantities are sold when product is featured against an average of 10071 quantities sold when not featured, resulting in an average difference of 30519 quantities (with a 95% probability, a store will sell between 29443.16 and 31594.84 more quantities).
