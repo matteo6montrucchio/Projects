@@ -1,0 +1,96 @@
+---
+title: "AB Testing and Regression Analysis"
+author: "Matteo Montrucchio"
+date: "2024-04-08"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## AB Testing
+In the following file, I will evaluate the effectiveness of featuring actions.
+I will analyze a dataset characterized by weekly sales and prices of orange juices across different stores for three brands. To evaluate the effectiveness of featuring actions, I compare the average sales by feat category.
+
+
+```{r include=FALSE}
+options(repos = c(CRAN = "https://cloud.r-project.org/"))
+install.packages("tinytex")
+tinytex::install_tinytex(force = TRUE)
+
+```
+```{r include=FALSE}
+library(dplyr)
+library(ggplot2)
+```
+
+
+```{r}
+library(readr)
+oj.data <- read_csv("/Users/matteomontrucchio/Desktop/oj_data.csv", show_col_types = FALSE)
+```
+
+
+```{r cars}
+# show the first rows of the dataset
+head(oj.data)
+```
+
+```{r}
+# summarize the information contained in the dataset
+summary(oj.data)
+```
+
+```{r}
+# generate the plot comparing average sales by feat category and their SD
+oj.data %>%
+  mutate(feat= as.factor(feat)) %>%     # from the summary(), feat is stored as numeric variable
+  group_by(feat) %>%                    
+  summarise(Average = mean(sales),
+            SD = sd(sales)) %>%
+  ggplot(aes(feat,Average)) + 
+  geom_point(size=5) +
+  geom_errorbar(aes(ymin=Average-SD, ymax=Average+SD), width=.2) 
+```
+
+```{r}
+t.table <- oj.data %>%
+  mutate(feat= as.factor(feat)) %>%
+  group_by(feat) %>%
+  summarise(Average = mean(sales),
+            Var = var(sales),
+            N = n())
+t.table
+```
+
+```{r}
+t.test(oj.data[oj.data$feat==1, 1], oj.data[oj.data$feat==0, 1], var.equal=FALSE)
+```
+The data provided shows how average sales are higher when the product is featured.
+
+On average, 40590 quantities are sold when product is featured against an average of 10071 quantities sold when not featured, resulting in an average difference of 30519 quantities (with a 95% probability, a store will sell between 29443.16 and 31594.84 more quantities).
+
+
+## Regression
+The goal is now to evaluate the effect that a price change has on the sales.
+
+I will at first perform a simple linear regression analysis not considering the featuring.
+```{r}
+# plot sales VS price for feat equal to 0
+ggplot(oj.data%>% filter(feat==0),aes(price,sales))+geom_point()+
+  geom_smooth(method='lm',formula=y~x)
+```
+
+```{r}
+# summary of the model
+summary(lm(sales~price, oj.data %>% filter(feat==0) ))
+```
+This highlights how an increase in price of one unit has a negative effect on the average weekly sales that will reduce of 5522.5 units (more precisely, with a 95% level of confidence, between 5747.312 and 5297.688)
+
+I will now run a second model in which I include the featuring effect in order to see if in the first model there was omitting variable bias.
+```{r}
+no.ovb <- lm(sales~price+feat, oj.data)
+summary(no.ovb)
+```
+Considering the featuring effect, the estimated decrease in sales is of 10399 (95% C.I.: between 9965.256 and 10833.144).
